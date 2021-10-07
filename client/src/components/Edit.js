@@ -1,0 +1,98 @@
+import React, { useEffect,useState } from 'react';
+import { Link,navigate } from '@reach/router';
+import axios from 'axios';
+import Delete from './Delete';
+
+const Edit=(props)=>
+{
+
+    const [name, setName] = useState(""); 
+    const [address, setAddress] = useState("");
+    const [phone, setPhone] = useState("");
+    const [cusine, setcusine] = useState(""); 
+    const [hasDelivery, sethasDelivery] = useState(false);
+    const [hours, sethours] = useState("");
+    const [homepage, sethomepage] = useState("");
+    const cusines=["Bar","Burgers","Cafe","Chinese","Coffee Shop","Fine Dining","Ice Cream","Italian","Mexican","Pizza","Sandwiches","SeaFood","Steakhouse","Thai"];
+    const [errors,setErrors]=useState({});
+    useEffect(() => {
+        axios.get("http://localhost:8000/api/restaurants/"+props.id)
+        .then((res) => {
+            setName(res.data.name);
+            setAddress(res.data.address);
+            setPhone(res.data.phone);
+            setcusine(res.data.cusine);
+            sethasDelivery(res.data.hasDelivery);
+            sethours(res.data.hours);
+            sethomepage(res.data.homepage);
+            })
+        .catch(err=>{
+            console.log("Error");
+            console.log(err.response.data.errors);
+        })
+    }, [])
+    const redirectAfterDelete=()=>
+    {
+        navigate("/restaurants");
+    }
+    const onSubmitHandler=(event)=>
+    {
+        event.preventDefault();
+        const postData={name,address,phone,cusine,hasDelivery,hours,homepage}
+        axios.put("http://localhost:8000/api/restaurants/"+props.id,postData)
+        .then((res) => {
+            console.log("Success");
+            console.log(res);
+            navigate("http://localhost:3000/restaurants/"+props.id)
+            })
+        .catch(err=>{
+            console.log("Error");
+            console.log(postData);
+            console.log(err.response.data.errors);
+            if(err.response.data.errors){
+                setErrors(err.response.data.errors);
+            }})
+        
+    }
+    
+    return(<div className="formDiv"><h1>Edit restaurant</h1>
+    <form><div>
+                <label>Name</label><br/>
+                <input type="text" value={name} onChange = {(e)=>setName(e.target.value)}/>
+                {errors.name?<span className="error-text">{errors.name.message}</span>:""}
+            </div>
+            <div>
+                <label>Address</label><br/>
+                <input type="text" value={address} onChange = {(e)=>setAddress(e.target.value)}/>
+                {errors.address?<span className="error-text">{errors.address.message}</span>:""}
+            </div>
+            <div>
+                <label>phone</label><br/>
+                <input type="text" value={phone} onChange = {(e)=>setPhone(e.target.value)}/>
+                {errors.phone?<span className="error-text">{errors.phone.message}</span>:""}
+            </div>
+            <div>
+                <label>cusine</label><br/>
+                <select name="cusine" value={cusine} onChange={e=>setcusine(e.target.value)}>
+                    <option value=""></option>
+                    {cusines.map((cusineType,idx)=>(<option value={cusineType} key={idx}>{cusineType}</option>))}
+                </select>
+                {errors.cusine?<span className="error-text">{errors.cusine.message}</span>:""}
+            </div>
+            <div className="checkboxDiv">
+                <label>Delivery Available?</label><br/>
+                <input type="checkbox" value={hasDelivery} checked={hasDelivery} onChange = {(e)=>sethasDelivery(e.target.checked)}/>
+                
+            </div>
+            <div>
+                <label>hours</label><br/>
+                <input type="text" value={hours} onChange = {(e)=>sethours(e.target.value)}/>
+            </div>
+            <div>
+                <label>homepage</label><br/>
+                <input type="text" value={homepage} onChange = {(e)=>sethomepage(e.target.value)}/>
+            </div>
+            </form>
+            <button className="editBtn" type="submit" onClick={onSubmitHandler}>Update Restaurant</button><Delete id={props.id} afterDelete={redirectAfterDelete}/></div>)
+}
+export default Edit;
